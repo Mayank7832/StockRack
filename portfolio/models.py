@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.hashers import make_password
 
 # Create your models here.
-class Stocks(models.Model):
+class Stock(models.Model):
     stockId = models.AutoField(db_column="stk_id", primary_key=True)
     stockName = models.CharField(db_column="stk_name", max_length=50, unique=True)
     scriptCode = models.CharField(db_column="stk_script_code", max_length=20, unique=True)
