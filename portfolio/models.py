@@ -49,6 +49,8 @@ class Portfolio(models.Model):
     transactionType = models.CharField(db_column="pof_tran_type", max_length=1, choices=TRANSACTION_TYPE)
     transactionPrice = models.DecimalField(db_column="pof_tran_price", max_digits=9, decimal_places=2)
     transactionDate = models.DateTimeField(db_column="pof_tran_date")
+    runningQtyBefore = models.IntegerField(db_column="pof_run_qty_before")
+    runningQtyAfter = models.IntegerField(db_column="pof_run_qty_after")
     createdOn = models.DateTimeField(db_column="createdOn", auto_now_add=True)
     updatedOn = models.DateTimeField(db_column="updatedOn", auto_now=True)
     

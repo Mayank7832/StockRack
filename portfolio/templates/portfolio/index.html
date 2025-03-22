@@ -1,0 +1,50 @@
+{% extends 'portfolio/base.html' %}
+
+{% block title %}My Portfolio{% endblock title %}
+
+{% block content %}
+    <h1 class="text-center mt-2">Welcome to My Portfolio</h1>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <table class="table mt-5 table-bordered table-striped table-hover">
+                    <thead class="text-center align-middle">
+                        <tr>
+                            <th class="fw-semibold" rowspan="2">Stock Name</th>
+                            <th class="fw-semibold" rowspan="2">Current Price</th>
+                            <th class="fw-semibold" rowspan="2">Quantity</th>
+                            <th class="fw-semibold" rowspan="2">Acquisition Price</th>
+                            <th class="fw-semibold">Investment Cost</th>
+                            <th class="fw-semibold">Investment Value</th>
+                            <th class="fw-semibold">Unrealized Gain</th>
+                            <th class="fw-semibold" rowspan="2">Realized Profit/Loss</th>
+                            <th class="fw-semibold" rowspan="2">Transaction</th>
+                        </tr>
+                        <tr>
+                            <th class="fw-semibold">Weight(%)</th>
+                            <th class="fw-semibold">Weight(%)</th>
+                            <th class="fw-semibold">Change(%)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for stock in portfolio %}
+                        <tr>
+                            <td>{{stock.stock.stockName}}</td>
+                            <td>{{stock.stock.price}}</td>
+                            <td>{{stock.runningQtyAfter}}</td>
+                            <td>{{stock.transactionPrice}}</td>
+                            <td></td>
+                            <td></td>
+                            <td class="text-success"></td>  
+                            <td class="text-success"></td>
+                            <td></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
