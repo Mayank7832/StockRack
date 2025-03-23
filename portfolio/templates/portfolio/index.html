@@ -3,7 +3,17 @@
 {% block title %}My Portfolio{% endblock title %}
 
 {% block content %}
-    <h1 class="text-center mt-2">Welcome to My Portfolio</h1>
+    <div class="header-container" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1; text-align: center;">
+            <h1 class="mt-2">Welcome to My Portfolio</h1>
+        </div>
+        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" style="background-color: #ff4d4d; color: white; border: none; padding: 8px 16px; margin-right: 124px; border-radius: 4px; cursor: pointer;">
+                Logout
+            </button>
+        </form>
+    </div>
 
     <div class="container">
         <div class="row justify-content-center">
@@ -29,15 +39,15 @@
                     </thead>
                     <tbody class="table-group-divider">
                         {% for stock in portfolio %}
-                        <tr>
-                            <td>{{stock.stock.stockName}}</td>
+                        <tr class="text-end">
+                            <td class="text-start">{{stock.stock.stockName}}</td>
                             <td>{{stock.stock.price}}</td>
                             <td>{{stock.runningQtyAfter}}</td>
                             <td>{{stock.transactionPrice}}</td>
-                            <td></td>
-                            <td></td>
-                            <td class="text-success"></td>  
-                            <td class="text-success"></td>
+                            <td>{{stock.investmentCost}}</td>
+                            <td>{{stock.currentValue}}</td>
+                            <td class="{% if stock.unrealizedProfit > 0 %}text-success{% else %}text-danger{% endif %}">{{stock.unrealizedProfit}}</td>  
+                            <td class="{% if stock.realizedProfit > 0 %}text-success{% else %}text-danger{% endif %}">{{stock.realizedProfit}}</td>
                             <td></td>
                         </tr>
                         {% endfor %}

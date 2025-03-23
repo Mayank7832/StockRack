@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password,check_password
 
 # Create your models here.
 class Stock(models.Model):
@@ -35,6 +35,9 @@ class User(models.Model):
     def save(self, *args, **kwargs):
         self.password = make_password(self.password)  # Hash before saving
         super().save(*args, **kwargs)
+
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
 
 class Portfolio(models.Model):
     TRANSACTION_TYPE = [
