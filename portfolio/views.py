@@ -1,14 +1,20 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from userAuth.decorators import login_required_custom
 from .models import Portfolio
-from django.db.models import Max
+from django.db.models import Max, F
 from .utils import FetchPortfolio, CalculatePnL
 
 # Create your views here.
+@login_required_custom
 def index(request):
+    
     view_request(request)
+    userId = request.myuser.userId
+    #print("User ID:", userId)
+    
 
     pfHelper = (
-        Portfolio.objects.filter(user_id=2)
+        Portfolio.objects.filter(user_id=userId)
         .values('stock')
         .annotate(maxDate = Max('transactionDate'))
     )
@@ -17,12 +23,18 @@ def index(request):
         Portfolio.objects.filter(
             transactionDate__in = [x['maxDate'] for x in pfHelper]
         ).select_related('stock')
+        .annotate(currentValue = F('stock__price') * F('runningQtyAfter'))
+        .annotate(investmentCost = F('transactionPrice') * F('runningQtyAfter'))
+        .annotate(unrealizedProfit = F('currentValue') - F('investmentCost'))
     )
 
     print(pf)
 
-    txns = FetchPortfolio(2)
+    txns = FetchPortfolio(userId)
     txns = CalculatePnL(txns)
+
+    for stock in pf:
+        stock.realizedProfit = txns.get(stock.stock.stockName)
 
     print(txns)
     
