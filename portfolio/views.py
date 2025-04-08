@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.http import JsonResponse
 from userAuth.decorators import login_required_custom
 from .models import Portfolio
-from django.db.models import Max, F
-from .utils import FetchPortfolio, CalculatePnL
+from .utils import PortfolioService
 
 # Create your views here.
 @login_required_custom
@@ -10,39 +11,25 @@ def index(request):
     
     view_request(request)
     userId = request.myuser.userId
-    #print("User ID:", userId)
-    
-
-    pfHelper = (
-        Portfolio.objects.filter(user_id=userId)
-        .values('stock')
-        .annotate(maxDate = Max('transactionDate'))
-    )
-
-    pf = (
-        Portfolio.objects.filter(
-            transactionDate__in = [x['maxDate'] for x in pfHelper]
-        ).select_related('stock')
-        .annotate(currentValue = F('stock__price') * F('runningQtyAfter'))
-        .annotate(investmentCost = F('transactionPrice') * F('runningQtyAfter'))
-        .annotate(unrealizedProfit = F('currentValue') - F('investmentCost'))
-    )
-
-    print(pf)
-
-    txns = FetchPortfolio(userId)
-    txns = CalculatePnL(txns)
-
-    for stock in pf:
-        stock.realizedProfit = txns.get(stock.stock.stockName)
-
-    print(txns)
+    userPortfolio = PortfolioService(userId).FetchPortfolio()
+    #print(userPortfolio)
     
     context = {
-        'portfolio' : pf,
-        'transactions' : txns,
+        'portfolio' : userPortfolio,
     }
     return render(request, 'portfolio/index.html', context)
+
+def delete_stock(request, stockId):
+    """
+    Delete a stock from the portfolio.
+    """
+    if request.method == "POST":
+        stock = get_object_or_404(Portfolio, pk=stockId)
+        stock.delete()
+    #     messages.success(request, "Stock deleted successfully!")
+    #     return JsonResponse({"success": True})
+    # return JsonResponse({"success": False}, status=400)
+    return redirect('portfolio:index')
 
 def view_request(request):
     print("Method:", request.method)
