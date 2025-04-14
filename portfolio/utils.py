@@ -1,5 +1,5 @@
 from django.db.models import OuterRef, Subquery, Max, F
-from .models import Portfolio, Stock
+from .models import Trade
 from collections import deque, defaultdict
 from decimal import Decimal
 
@@ -10,7 +10,7 @@ class PortfolioService():
 
     def __init__(self, userId):
         self.userId = userId
-        self.userTxns = Portfolio.objects.filter(user_id=userId)
+        self.userTxns = Trade.objects.filter(user_id=userId)
 
     def FetchUserTxnDetails(self):
         """
@@ -34,7 +34,7 @@ class PortfolioService():
         )
 
         userPortfolio = (
-            Portfolio.objects.filter(pk__in=Subquery(latestStockTxnSubquery), runningQtyAfter__gt=0)
+            Trade.objects.filter(pk__in=Subquery(latestStockTxnSubquery), runningQtyAfter__gt=0)
             .select_related('stock')
             .annotate(investmentValue = F('stock__price') * F('runningQtyAfter'))
         )
