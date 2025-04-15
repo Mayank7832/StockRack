@@ -99,3 +99,13 @@ class PortfolioService():
 
         return stockTxns
 
+    def ValidateTransactionForEditOrDelete(self, transactionId):
+        """
+        Validate if the transaction can be edited or deleted.
+        """
+        try:
+            transaction = Portfolio.objects.get(portfolioId=transactionId)
+            
+            return transaction
+        except Portfolio.DoesNotExist:
+            return None
