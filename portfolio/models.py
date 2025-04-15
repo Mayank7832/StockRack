@@ -5,30 +5,36 @@ from django.contrib.auth.hashers import make_password,check_password
 
 # Create your models here.
 class Stock(models.Model):
-    stockId = models.AutoField(db_column="stk_id", primary_key=True)
-    stockName = models.CharField(db_column="stk_name", max_length=50, unique=True)
-    scriptCode = models.CharField(db_column="stk_script_code", max_length=20, unique=True)
+    class Meta:
+        constraints = [
+            CheckConstraint(
+                check=Q(price__gt=0),
+                name="stock_price_positive_constraint"
+            )
+        ]
+
+    stock_id = models.AutoField(db_column="stk_id", primary_key=True)
+    stock_name = models.CharField(db_column="stk_name", max_length=50, unique=True)
+    script_code = models.CharField(db_column="stk_script_code", max_length=20, unique=True)
     price = models.DecimalField(db_column="stk_price", max_digits=9, decimal_places=2)
-    createdOn = models.DateTimeField(db_column="createdOn", auto_now_add=True)
-    updatedOn = models.DateTimeField(db_column="updatedOn", auto_now=True)
+    created_on = models.DateTimeField(db_column="created_on", auto_now_add=True)
+    updated_on = models.DateTimeField(db_column="updated_on", auto_now=True)
 
     def __str__(self):
-        return self.stockName
+        return " | ".join((self.stock_name, str(self.price)))
     
 class User(models.Model):
-    userId = models.AutoField(db_column="usr_id", primary_key=True)
+    user_id = models.AutoField(db_column="usr_id", primary_key=True)
     name = models.CharField(db_column="usr_name", max_length = 100)
-    emailId = models.EmailField(db_column="usr_email_id", unique=True)
+    email_id = models.EmailField(db_column="usr_email_id", unique=True)
     password = models.CharField(db_column="usr_password", max_length=128)
-    createdOn = models.DateTimeField(db_column="createdOn", auto_now_add=True)
-    updatedOn = models.DateTimeField(db_column="updatedOn", auto_now = True)
+    created_on = models.DateTimeField(db_column="created_on", auto_now_add=True)
+    updated_on = models.DateTimeField(db_column="updated_on", auto_now = True)
 
     def __str__(self):
-        return str({
-            "UserId" :self.userId,
-            "UserName" : self.name,
-            "EmailId" : self.emailId,
-            })
+        return " | ".join((str(self.user_id), 
+                           self.name, 
+                           self.email_id))
     
     def save(self, *args, **kwargs):
         self.password = make_password(self.password)  # Hash before saving
@@ -48,10 +54,10 @@ class Trade(models.Model):
                 check=Q(date__lte=TruncDate(F('created_on'))),
                 name="trade_date_not_in_future_constraint"
             ),
-            # CheckConstraint(
-            #     check=Q(trade_price__gt=0),
-            #     name="trade_price_positive_constraint"
-            # ),
+            CheckConstraint(
+                check=Q(trade_price__gt=0),
+                name="trade_price_positive_constraint"
+            ),
             CheckConstraint(
                 check=Q(quantity__gt=0),
                 name="trade_quantity_positive_constraint"
@@ -79,9 +85,9 @@ class Trade(models.Model):
     updated_on = models.DateTimeField(db_column="updated_on", auto_now=True)
     
     def __str__(self):
-        return str({
-            "TradeId": self.trade_id,
-            "UserId": self.user.userId,
-            "StockId": self.stock.stockId,
-        })
+        return " | ".join((str(self.trade_id), 
+                           self.user.name, 
+                           self.stock.stock_name, 
+                           self.direction, 
+                           str(self.quantity)))
 
