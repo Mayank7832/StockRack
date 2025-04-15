@@ -10,16 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='portfolio',
-            old_name='stock',
-            new_name='stockId',
-        ),
-        migrations.RenameField(
-            model_name='portfolio',
-            old_name='user',
-            new_name='userId',
-        ),
         migrations.AddField(
             model_name='portfolio',
             name='runningQtyAfter',

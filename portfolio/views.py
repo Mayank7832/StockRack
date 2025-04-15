@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import JsonResponse
 from userAuth.decorators import login_required_custom
 from django.views.decorators.http import require_POST
 from .models import Portfolio
+=======
+from .forms import TradeForm
+from .models import Trade
+>>>>>>> f030fc59f63ca5d2d26471b3ca998620bbad7757
 from .utils import PortfolioService
 
 # Create your views here.
@@ -25,12 +28,37 @@ def delete_stock(request, stockId):
     Delete a stock from the portfolio.
     """
     if request.method == "POST":
-        stock = get_object_or_404(Portfolio, pk=stockId)
-        stock.delete()
-    #     messages.success(request, "Stock deleted successfully!")
-    #     return JsonResponse({"success": True})
-    # return JsonResponse({"success": False}, status=400)
+        txns = Trade.objects.filter(stock_id=stockId, user=request.myuser.userId)
+        txns.delete()
+        messages.success(request, "Stock deleted successfully!")
     return redirect('portfolio:index')
+
+def add_trade(request):
+    if request.method == 'POST':
+        form = TradeForm(request.POST)
+        if form.is_valid():
+            stock = form.cleaned_data['stock']
+            stockQty = form.cleaned_data['stockQty']
+            transactionPrice = form.cleaned_data['transactionPrice']
+            transactionType = form.cleaned_data['transactionType']
+            transactionDate = form.cleaned_data['transactionDate']
+
+            portfolio = Trade(
+                user=request.myuser,
+                stock=stock,
+                stockQty=stockQty,
+                transactionPrice=transactionPrice,
+                transactionType=transactionType,
+                transactionDate=transactionDate,
+                runningQtyAfter=stockQty if transactionType == 'B' else -stockQty,
+                runningQtyBefore=0,
+            )
+            portfolio.save()
+            messages.success(request, "Trade added successfully!")
+            return redirect('portfolio:index')
+    else:
+        form = TradeForm()
+    return render(request, 'portfolio/add_trade.html', {'form': form})
 
 def view_request(request):
     print("Method:", request.method)
