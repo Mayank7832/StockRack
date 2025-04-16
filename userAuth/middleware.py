@@ -11,7 +11,7 @@ class AttachMyUserMiddleware:
         user_id = request.session.get('user_id')
         if user_id:
             try:
-                request.myuser = User.objects.get(userId=user_id)
+                request.myuser = User.objects.get(user_id=user_id)
             except User.DoesNotExist:
                 pass
         #print("Attached user:", request.myuser)
