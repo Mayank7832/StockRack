@@ -10,12 +10,11 @@ from .utils import PortfolioService
 def index(request):
     
     view_request(request)
-    userId = request.myuser.userId
-    userPortfolio = PortfolioService(userId).FetchPortfolio()
-    #print(userPortfolio)
+    user = request.myuser
+    portfolio = PortfolioService(user).fetch_portfolio()
 
     context = {
-        'portfolio' : userPortfolio,
+        'portfolio' : portfolio,
     }
     return render(request, 'portfolio/index.html', context)
 
@@ -34,20 +33,18 @@ def add_trade(request):
         form = TradeForm(request.POST)
         if form.is_valid():
             stock = form.cleaned_data['stock']
-            stockQty = form.cleaned_data['stockQty']
-            transactionPrice = form.cleaned_data['transactionPrice']
-            transactionType = form.cleaned_data['transactionType']
-            transactionDate = form.cleaned_data['transactionDate']
+            stockQty = form.cleaned_data['quantity']
+            transactionPrice = form.cleaned_data['trade_price']
+            transactionType = form.cleaned_data['direction']
+            transactionDate = form.cleaned_data['date']
 
             portfolio = Trade(
                 user=request.myuser,
                 stock=stock,
-                stockQty=stockQty,
-                transactionPrice=transactionPrice,
-                transactionType=transactionType,
-                transactionDate=transactionDate,
-                runningQtyAfter=stockQty if transactionType == 'B' else -stockQty,
-                runningQtyBefore=0,
+                quantity=stockQty,
+                trade_price=transactionPrice,
+                direction=transactionType,
+                date=transactionDate,
             )
             portfolio.save()
             messages.success(request, "Trade added successfully!")
