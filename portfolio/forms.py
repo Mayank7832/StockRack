@@ -16,14 +16,8 @@ class TradeForm(ModelForm):
         labels = {
             'trade_price': 'Price',
         }
-    # def clean(self):
-    #     cleaned_data = super().clean()
-    #     quantity = cleaned_data.get('quantity')
-    #     price = cleaned_data.get('price')
 
-    #     if quantity <= 0:
-    #         self.add_error('quantity', 'Quantity must be greater than zero.')
-    #     if price <= 0:
-    #         self.add_error('price', 'Price must be greater than zero.')
-
-    #     return cleaned_data
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['stock'].empty_label = "Select a stock"
+        self.fields['stock'].label_from_instance = lambda obj: f"{obj.stock_name}"

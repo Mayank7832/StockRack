@@ -42,24 +42,24 @@
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
-                        {% for stock in portfolio %}
+                        {% for pf_record in portfolio %}
                         <tr class="text-end">
-                            <td class="text-start">{{stock.stock.stockName}}</td>
-                            <td>{{stock.stock.price}}</td>
-                            <td class="text-center">{{stock.runningQtyAfter}}</td>
-                            <td>{{ stock.avgBuyPrice|floatformat:2 }}</td>
-                            <td>{{ stock.investmentCost|floatformat:2 }}</td>
-                            <td>{{ stock.investmentValue|floatformat:2 }}</td>
-                            <td class="{% if stock.unrealizedProfit > 0 %} text-success {% else %} text-danger {% endif %}">
-                                {{ stock.unrealizedProfit|floatformat:2 }}
+                            <td class="text-start">{{pf_record.stock.stock_name}}</td>
+                            <td>{{pf_record.stock.price}}</td>
+                            <td class="text-center">{{pf_record.holding_qty}}</td>
+                            <td>{{ pf_record.avg_price|floatformat:2 }}</td>
+                            <td>{{ pf_record.investment_cost|floatformat:2 }}</td>
+                            <td>{{ pf_record.investment_value|floatformat:2 }}</td>
+                            <td class="{% if pf_record.unrealized_profit > 0 %} text-success {% else %} text-danger {% endif %}">
+                                {{ pf_record.unrealized_profit|floatformat:2 }}
                             </td>  
-                            <td class="{% if stock.realizedProfit > 0 %} text-success {% else %} text-danger {% endif %}">
-                                {{ stock.realizedProfit|floatformat:2 }}
+                            <td class="{% if pf_record.realized_profit > 0 %} text-success {% else %} text-danger {% endif %}">
+                                {{ pf_record.realized_profit|floatformat:2 }}
                             </td>
                             <td class="text-center">
                                 <a class="btn btn-success btn-sm" href="{% url 'portfolio:add_trade' %}"><i class="bi bi-plus-lg"></i></a>
                                 <button class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i></button>
-                                <form action="{% url 'portfolio:delete_stock' stock.stock.stockId %}" method="POST" onsubmit="return confirm('Are you sure you want to delete this stock?');" style="display: inline;">
+                                <form action="{% url 'portfolio:delete_stock' pf_record.stock_id %}" method="POST" onsubmit="return confirm('Are you sure you want to delete this stock?');" style="display: inline;">
                                     {% csrf_token %}
                                     <button class="btn btn-danger btn-sm">
                                         <i class="bi bi-trash"></i>
