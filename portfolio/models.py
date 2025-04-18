@@ -47,10 +47,6 @@ class Trade(models.Model):
     class Meta:
         constraints = [
             CheckConstraint(
-                check=~Q(direction='S') | Q(quantity_before__gte=F('quantity')),
-                name="trade_sell_quantity_valid_constraint"
-            ),
-            CheckConstraint(
                 check=Q(date__lte=TruncDate(F('created_on'))),
                 name="trade_date_not_in_future_constraint"
             ),
@@ -64,12 +60,13 @@ class Trade(models.Model):
             )
         ]
 
+    # A sequence of 2-value tuples to use as choices for a field.
+    # The first element in each tuple is the value that will be stored in the database.
+    # The second element is displayed by the field's form widget.
     TRANSACTION_TYPE = [
-        ('B', 'Buy'),
-        ('S', 'Sell'),
-        # A sequence of 2-value tuples to use as choices for a field.
-        # The first element in each tuple is the value that will be stored in the database.
-        # The second element is displayed by the field's form widget.
+        ('', 'Type'),
+        ('B', 'BUY'),
+        ('S', 'SELL'),
     ]
 
     trade_id = models.AutoField(db_column="trd_id", primary_key=True)
@@ -80,7 +77,6 @@ class Trade(models.Model):
     trade_price = models.DecimalField(db_column="trd_price", max_digits=9, decimal_places=2)
     date = models.DateField(db_column="trd_date")
     quantity_before = models.IntegerField(db_column="trd_qty_before", default=0)
-    #quantity_after = models.IntegerField(db_column="trd_qty_after")
     created_on = models.DateTimeField(db_column="created_on", auto_now_add=True)
     updated_on = models.DateTimeField(db_column="updated_on", auto_now=True)
     
