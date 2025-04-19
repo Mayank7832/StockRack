@@ -1,0 +1,52 @@
+{% extends 'portfolio/base.html' %}
+{% load static %}
+
+{% block title %}My Portfolio{% endblock title %}
+
+{% block content %}
+    <div class="header-container" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1; text-align: center;">
+            <h1 class="mt-2">Welcome to My Portfolio</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <h3 class="text-center mt-4">Transactions for: {{ transactions.0.user.name }}</h3>
+                <table class="table mt-5 table-bordered table-striped table-hover">
+                    <thead class="text-center align-middle">
+                        <tr>
+                            <th class="fw-semibold" rowspan="2">Stock Name</th>
+                            <th class="fw-semibold" rowspan="2">Quantity</th>
+                            <th class="fw-semibold" rowspan="2">Acquisition Price</th>
+                            <th class="fw-semibold" rowspan="2">Direction</th>
+                            <th class="fw-semibold" rowspan="2">Trade Date</th>
+                            <th class="fw-semibold" rowspan="2">Manage</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        {% for transaction in transactions %}
+                        <tr class="text-end">
+                            <td class="text-start">{{transaction.stock.stock_name}}</td>
+                            <td>{{transaction.quantity}}</td>
+                            <td>{{transaction.trade_price}}</td>
+                            <td>{{transaction.direction}}</td>
+                            <td>{{transaction.date}}</td>
+                            <td class="text-center">
+                            <input type="hidden" class="portfolio-id" value="{{ transaction.trade_id }}">
+                            <button type= "button" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(event,this)"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/transaction.js' %}"></script>
+{% endblock %}
