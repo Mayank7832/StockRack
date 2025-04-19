@@ -24,7 +24,6 @@ SECRET_KEY = 'django-insecure-+xvt2$@^v2gc14@f8vkmx@7c_lloql&gpm7e8umuwane(-zvtg
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
 
 
@@ -128,3 +127,5 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+

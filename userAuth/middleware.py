@@ -5,14 +5,19 @@ class AttachMyUserMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        #print("Session user_id:", request.session.get('user_id'))
-        
         request.myuser = None
         user_id = request.session.get('user_id')
+
         if user_id:
-            try:
+            try: 
                 request.myuser = User.objects.get(user_id=user_id)
             except User.DoesNotExist:
                 pass
-        #print("Attached user:", request.myuser)
-        return self.get_response(request)
+
+        
+        response = self.get_response(request)
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+
+        return response

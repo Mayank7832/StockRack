@@ -5,15 +5,18 @@ from portfolio.models import User
 # Create your views here.
 
 def login(request):
-    print_request(request)
+    if request.method == 'GET':
+        if request.session.get('user_id'):
+            return redirect('portfolio:index')
+        return render(request, 'login.html')
     if request.method == 'POST':
         emailId = request.POST.get('email')
         password = request.POST.get('password')
         try: 
-            user = User.objects.get(emailId=emailId)
+            user = User.objects.get(email_id=emailId)
             if user.check_password(password):
-                request.session['user_id'] = user.userId
-                return redirect('index')
+                request.session['user_id'] = user.user_id
+                return redirect('portfolio:index')
             else:
                   return render(request, 'login.html', {'error': 'Incorrect password'})
         except User.DoesNotExist:
@@ -48,4 +51,4 @@ def print_request(request):
 
 def logout(request):
     request.session.flush()
-    return redirect('index')
+    return redirect('portfolio:index')
