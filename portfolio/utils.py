@@ -1,4 +1,4 @@
-from django.db.models import IntegerField, Max, F, Case, When, ExpressionWrapper
+from django.db.models import IntegerField, Max, F, Q, Case, When, ExpressionWrapper
 from .models import Trade
 from collections import deque
 from decimal import Decimal
@@ -165,20 +165,19 @@ class PortfolioService:
     def GetQuantityBefore(self,stock_id,date,direction):
         quantity_before = 0
         priorTrade = (
-            self.userTxns.filter(
+            self.user_trades.filter(
             stock_id=stock_id,
-            date__lt=date
+            date__lte=date
             )
-            .order_by('-date')
+            .order_by('-date', '-trade_id')
             .first()
         )
         print("Prior Trade:", priorTrade)
 
         if priorTrade is None and direction == 'S':
             raise Exception("Cannot sell as no prior buy transaction found.")
-        else:
-            if priorTrade is None:
-                return 0
+        elif priorTrade is None: return 0
+
         if priorTrade.direction == 'B':
             quantity_before = priorTrade.quantity_before + priorTrade.quantity
         else:
@@ -186,61 +185,92 @@ class PortfolioService:
 
         return quantity_before
     
-def ValidateTransactionForEditOrDelete(trade,operation):
-        try:
-            if operation == 'DELETE':
-                trade = Trade.objects.get(trade_id=trade.trade_id)
-
-            trades = Trade.objects.filter(
-                user_id=trade.user_id,
-                stock_id=trade.stock_id,
-                date__gt=trade.date
-
-            ).order_by('date')
-
-
-            if operation == 'ADD':
-                if trade.direction == 'S':
-                    if trade.quantity_before < trade.quantity:
-                        print("Cannot Sell as available quantity less than sell quantity.")
-                        return False
-
-                for trd in trades:
-                    if trd.quantity_before + trade.quantity < 0:
-                        print("Invalid transaction")
-                        return False
-            elif operation == 'DELETE':
-                for trd in trades:
-                    if trd.quantity_before - trade.quantity < 0:
-                        print("Invalid transaction")
-                        return False
-            
-            return True  
-        except Trade.DoesNotExist:
-            return None
+def validate_transaction_for_edit_or_delete(trades, operation):
+    print(f"Validating transaction for operation: {operation}")
+    try:
+        if not trades:
+            return False  
         
-def UpdateSubsequentTransactionsForAddAndDelete(trade,operation):
+        if operation == 'DELETE':
+            trade = Trade.objects.get(trade_id=trades[0].trade_id)
+            if trade.quantity_before <= 0:
+                print(f"Cannot delete: available quantity would become less than 0. Trade ID: {trade.trade_id}")
+                return False
+        
+        elif operation == 'EDIT':
+            trade = trades[0]
+            if get_quantity_after(trade) < 0:
+                print(f"Cannot edit: available quantity would become less than 0. Trade ID: {trade.trade_id}")
+                return False
+        
+        elif operation == 'ADD':
+            stocks_processed = {}
+
+            for trade in trades:
+                stock_name = trade.stock.stock_name
+                trade_date = trade.date
+
+                if stock_name in stocks_processed:
+                    if stocks_processed[stock_name] != trade_date:
+                        raise Exception(f"Multiple dates for stock: {stock_name}. First date: {stocks_processed[stock_name]}, Second date: {trade_date}")
+                    else:
+                        continue
+                else:
+                    stocks_processed[stock_name] = trade_date
+
+                prior_trade = Trade.objects.filter(
+                    user_id=trade.user_id,
+                    stock_id=trade.stock_id,
+                    date__lte=trade.date
+                ).order_by('-date', '-trade_id').first()
+
+                net_quantity_before_new_trades = get_quantity_after(prior_trade) if prior_trade else 0
+                net_quantity_after_new_trades = sum(
+                    t.quantity if t.direction == 'B' else -t.quantity
+                    for t in trades
+                    if t.stock.stock_name == stock_name
+                )
+
+                if net_quantity_before_new_trades + net_quantity_after_new_trades < 0:
+                    print(f"Cannot add: available quantity would become less than 0. Stock: {stock_name}")
+                    return False
+        else:
+            print(f"Unsupported operation: {operation}")
+            return False
+
+        return True
+    
+    except Trade.DoesNotExist:
+        print("Trade does not exist.")
+        return None
+    except Exception as e:
+        print(f"Unexpected error occurred: {e}")
+        return None
+        
+def delete_subsequent_transactions(trade):
         try:
             trades = Trade.objects.filter(
                 user_id=trade.user_id,
                 stock_id=trade.stock_id,
-                date__gt=trade.date
+                date__gte=trade.date
+            )
+            
+            if trades.exists():
+                trades_to_delete = trades.filter(
+                    Q(date__gt=trade.date) | Q(date=trade.date, trade_id__gt=trade.trade_id)
+                )
 
-            ).order_by('date')
-            
-
-            trades_to_update = []
-            for trd in trades:
-                if operation == 'ADD':
-                    trd.quantity_before += trade.quantity if trade.direction == 'B' else -trade.quantity
-                elif operation == 'DELETE':
-                    trd.quantity_before -= trade.quantity if trade.direction == 'B' else -trade.quantity
-                trades_to_update.append(trd)
-            
-            Trade.objects.bulk_update(trades_to_update, ['quantity_before'])
-            
+                trades_to_delete.delete()
             return True  
-        except Trade.DoesNotExist:
-            return None
+        
+        except Exception as e:
+            print(f"Error deleting subsequent trades: {e}")
+            raise Exception(e)
+        
+def get_quantity_after(trade):
+    if trade.direction == 'B':
+        return trade.quantity_before + trade.quantity
+    else:
+        return trade.quantity_before - trade.quantity
         
 
