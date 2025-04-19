@@ -23,7 +23,7 @@ function deleteRow(event,button) {
       return;
     }
   
-    fetch(`/portfolio/delete-transaction/${transactionId}/`, {
+    fetch(`/portfolio/delete_transaction/${transactionId}/`, {
      
       method: "POST",
       headers: {
