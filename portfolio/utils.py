@@ -161,13 +161,86 @@ class PortfolioService:
 
         return trades_by_stock
 
-    def ValidateTransactionForEditOrDelete(self, transactionId):
-        """
-        Validate if the transaction can be edited or deleted.
-        """
+    
+    def GetQuantityBefore(self,stock_id,date,direction):
+        quantity_before = 0
+        priorTrade = (
+            self.userTxns.filter(
+            stock_id=stock_id,
+            date__lt=date
+            )
+            .order_by('-date')
+            .first()
+        )
+        print("Prior Trade:", priorTrade)
+
+        if priorTrade is None and direction == 'S':
+            raise Exception("Cannot sell as no prior buy transaction found.")
+        else:
+            if priorTrade is None:
+                return 0
+        if priorTrade.direction == 'B':
+            quantity_before = priorTrade.quantity_before + priorTrade.quantity
+        else:
+            quantity_before = priorTrade.quantity_before - priorTrade.quantity
+
+        return quantity_before
+    
+def ValidateTransactionForEditOrDelete(trade,operation):
         try:
-            transaction = Portfolio.objects.get(portfolioId=transactionId)
+            if operation == 'DELETE':
+                trade = Trade.objects.get(trade_id=trade.trade_id)
+
+            trades = Trade.objects.filter(
+                user_id=trade.user_id,
+                stock_id=trade.stock_id,
+                date__gt=trade.date
+
+            ).order_by('date')
+
+
+            if operation == 'ADD':
+                if trade.direction == 'S':
+                    if trade.quantity_before < trade.quantity:
+                        print("Cannot Sell as available quantity less than sell quantity.")
+                        return False
+
+                for trd in trades:
+                    if trd.quantity_before + trade.quantity < 0:
+                        print("Invalid transaction")
+                        return False
+            elif operation == 'DELETE':
+                for trd in trades:
+                    if trd.quantity_before - trade.quantity < 0:
+                        print("Invalid transaction")
+                        return False
             
-            return transaction
-        except Portfolio.DoesNotExist:
+            return True  
+        except Trade.DoesNotExist:
             return None
+        
+def UpdateSubsequentTransactionsForAddAndDelete(trade,operation):
+        try:
+            trades = Trade.objects.filter(
+                user_id=trade.user_id,
+                stock_id=trade.stock_id,
+                date__gt=trade.date
+
+            ).order_by('date')
+            
+
+            trades_to_update = []
+            for trd in trades:
+                if operation == 'ADD':
+                    trd.quantity_before += trade.quantity if trade.direction == 'B' else -trade.quantity
+                elif operation == 'DELETE':
+                    trd.quantity_before -= trade.quantity if trade.direction == 'B' else -trade.quantity
+                trades_to_update.append(trd)
+            
+            Trade.objects.bulk_update(trades_to_update, ['quantity_before'])
+            
+            return True  
+        except Trade.DoesNotExist:
+            return None
+        
+
