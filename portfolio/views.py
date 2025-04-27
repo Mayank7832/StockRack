@@ -3,7 +3,7 @@ from django.contrib import messages
 from userAuth.decorators import login_required_custom
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-from .forms import TradeForm
+from .forms import TradeForm, TradeFormSet
 from .models import Trade
 from .utils import PortfolioService, validate_transaction_for_edit_or_delete, delete_subsequent_transactions
 
@@ -34,10 +34,16 @@ def add_trade(request):
     print("Add Request received")
     if request.method == 'POST':
         print("POST request received")
-        form = TradeForm(request.POST)
+        formset = TradeFormSet(request.POST)
         userId = request.myuser.user_id
         try: 
-            if form.is_valid():
+            if formset.is_valid():
+                for form in formset:
+                    if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                        # Write your logic to handle the form data here
+                        # Trade.objects.create()
+                        pass
+
                 stock = form.cleaned_data['stock']
                 stockQty = form.cleaned_data['quantity']
                 transactionPrice = form.cleaned_data['trade_price']
@@ -67,8 +73,8 @@ def add_trade(request):
             print("Error:", str(e))
             messages.error(request, f"Error: {str(e)}")
     else:
-        form = TradeForm()
-    return render(request, 'portfolio/add_trade.html', {'form': form})
+        formset = TradeFormSet(queryset=Trade.objects.none())
+    return render(request, 'portfolio/add_trade.html', {'formset': formset})
 
 def view_request(request):
     print("Method:", request.method)

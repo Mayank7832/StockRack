@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import ModelForm
+from django.forms import ModelForm, modelformset_factory
 from .models import Trade
 
 class TradeForm(ModelForm):
@@ -21,3 +21,11 @@ class TradeForm(ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['stock'].empty_label = "Select a stock"
         self.fields['stock'].label_from_instance = lambda obj: f"{obj.stock_name}"
+
+TradeFormSet = modelformset_factory(
+    Trade,
+    form=TradeForm,
+    min_num=1,
+    extra=0,
+    can_delete=True,
+)
