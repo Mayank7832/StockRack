@@ -1,15 +1,11 @@
 {% extends 'portfolio/base.html' %}
 {% load static %}
 
-{% block title %}My Portfolio{% endblock title %}
+{% block title %}
+    My Portfolio
+{% endblock title %}
 
 {% block content %}
-    <div class="header-container" style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="flex: 1; text-align: center;">
-            <h1 class="mt-2">Welcome to My Portfolio</h1>
-        </div>
-    </div>
-
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-12">
@@ -48,5 +44,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'js/transaction.js' %}"></script>
+    <script src="{% static 'js/transaction.js' %}"></script>
 {% endblock %}
